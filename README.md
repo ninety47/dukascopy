@@ -1,4 +1,5 @@
 dukascopy-bi5
 =============
 
-LIbrary for handling binary data from Dukascopy tick files.
+Library for handling binary data from Dukascopy tick files.
+
