@@ -38,7 +38,7 @@ struct tick {
 tick* tickFromBuffer(char *buffer, time_t epoch, float digits, size_t offset=0);
 
 
-tick_data* readbi5(char *buffer, size_t buffer_size, time_t epoch, float point_value);
+tick_data* read_bin(char *buffer, size_t buffer_size, time_t epoch, float point_value);
 
 
 } // namespace n47

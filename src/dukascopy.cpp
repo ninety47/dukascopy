@@ -3,7 +3,7 @@
  */
 
 
-#include "../include/bi5.h"
+#include "../include/dukascopy.h"
 #include "../include/lowkey.hpp"
 
 #include <ctime>
@@ -12,7 +12,7 @@
 
 namespace n47 {
 
-size_t ROW_SIZE = 20;
+size_t ROW_SIZE = SIZEOF5(unsigned int, int, int, int, int);
 
 template <typename T>
 void byteSwap(T *p) {
@@ -60,7 +60,7 @@ tick *tickFromBuffer(char *buffer, time_t epoch, float digits, size_t offset){
 }
 
 
-tick_data* readbi5(char *buffer, size_t buffer_size, time_t epoch, float point_value) {
+tick_data* read_bin(char *buffer, size_t buffer_size, time_t epoch, float point_value) {
     std::vector<tick*> *data = new std::vector<tick*>();
     std::vector<tick*>::iterator iter;
 
