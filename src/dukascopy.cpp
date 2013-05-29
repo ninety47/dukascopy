@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <vector>
 
+#include <lzma/lzma.h>
+
 namespace n47 {
 
 size_t ROW_SIZE = SIZEOF5(unsigned int, int, int, int, int);
@@ -78,6 +80,11 @@ tick_data* read_bin(char *buffer, size_t buffer_size, time_t epoch, float point_
     return data;
 }
 
+
+
+tick_data* read_bi5(char *lzma_filename, time_t epoch, float point_value, size_t buffer_size=-1) {
+    return 0;
+}
 
 } // namespace n47
 

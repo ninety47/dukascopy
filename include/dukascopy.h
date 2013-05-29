@@ -41,6 +41,8 @@ tick* tickFromBuffer(char *buffer, time_t epoch, float digits, size_t offset=0);
 tick_data* read_bin(char *buffer, size_t buffer_size, time_t epoch, float point_value);
 
 
+tick_data* read_bi5(char *lzma_filename, time_t epoch, float point_value, size_t buffer_size=-1);
+
 } // namespace n47
 
 #endif
