@@ -16,14 +16,6 @@ namespace n47 {
 
 size_t ROW_SIZE = SIZEOF5(unsigned int, int, int, int, int);
 
-template <typename T>
-void byteSwap(T *p) {
-    int i;
-    for (i = 0; i < sizeof(T)/2; ++i) {
-        std::swap( ((char *) p)[i], ((char *) p)[sizeof(T)-1-i] );
-    }
-}
-
 
 template <typename T>
 T bytesTo(char *buffer, bool little_endian) {
