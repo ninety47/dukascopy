@@ -78,3 +78,9 @@ results
 
 npm-debug.log
 node_modules
+
+###########################
+# Vi and VIM files.
+#--------------------------
+*.swp
+
