@@ -7,29 +7,40 @@ namespace n47 {
 
     struct NullType {};
 
-    template <typename H, class TL>
+    template <class T, class U>
     struct TypeList {
-        static const int size = sizeof(H) + TL::size;
+        typedef T Head;
+        typedef U Tail;
     };
 
-    template <typename H>
-    struct TypeList <H, NullType> {
-        static const size_t size = sizeof(H);
+    template <class TList> struct SizeOf;
+
+    template <> struct SizeOf<NullType> {
+        enum { value = 0 };
     };
 
-    #define SIZEOF1(T1) <T1, NullType>::size
-
-    #define SIZEOF2(T1, T2) TypeList<T1, TypeList<T2, NullType> >::size
-
-    #define SIZEOF3(T1, T2, T3) TypeList<T1, TypeList<T2, TypeList<T3, NullType> > >::size
-
-    #define SIZEOF4(T1, T2, T3, T4) TypeList<T1, TypeList<T2, TypeList<T3, TypeList<T4, NullType> > > >::size
-
-    #define SIZEOF5(T1, T2, T3, T4, T5) TypeList<T1, TypeList<T2, TypeList<T3, TypeList<T4, TypeList<T5, NullType> > > > >::size
+    template <class T, class U>
+    struct SizeOf< TypeList<T, U> > {
+        enum { value = sizeof(T) + SizeOf<U>::value };
+    };
 
     } // namespace loki
 } // namesapce n47
 
+#ifndef DISABLE_TYPELIST_MACROS
 
+#define TYPELIST_1(T1) ::n47::loki::TypeList<T1, ::n47::loki::NullType>
+
+#define TYPELIST_2(T1, T2) ::n47::loki::TypeList<T1, TYPELIST_1(T2) >
+
+#define TYPELIST_3(T1, T2, T3) ::n47::loki::TypeList<T1, TYPELIST_2(T2, T3) >
+
+#define TYPELIST_4(T1, T2, T3, T4) \
+    ::n47::loki::TypeList<T1, TYPELIST_3(T2, T3, T4) >
+
+#define TYPELIST_5(T1, T2, T3, T4, T5) \
+    ::n47::loki::TypeList<T1, TYPELIST_4(T2, T3, T4, T5) >
+
+#endif // DISABLE_TYPELIST_MACROS
 
 #endif // _N47_LOKI_HEADER_INCLUDED_

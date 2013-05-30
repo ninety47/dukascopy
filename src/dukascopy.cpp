@@ -14,6 +14,8 @@
 
 namespace n47 {
 
+const int ROW_SIZE = ::n47::loki::SizeOf< TYPELIST_5(unsigned int, int, int, int, int) >::value;
+
 size_t ROW_SIZE = SIZEOF5(unsigned int, int, int, int, int);
 
 
