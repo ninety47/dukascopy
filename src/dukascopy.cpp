@@ -4,7 +4,7 @@
 
 
 #include "../include/dukascopy.h"
-#include "../include/lowkey.hpp"
+#include "../include/loki.hpp"
 
 #include <ctime>
 #include <algorithm>
