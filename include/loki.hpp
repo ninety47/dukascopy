@@ -1,5 +1,5 @@
-#ifndef _N47_LOKILIKE_HEADER_INCLUDED_120knjvcaasd823mn_
-#define _N47_LOKILIKE_HEADER_INCLUDED_120knjvcaasd823mn_
+#ifndef _N47_LOKI_HEADER_INCLUDED_
+#define _N47_LOKI_HEADER_INCLUDED_
 
 
 namespace n47 {
@@ -32,4 +32,4 @@ namespace n47 {
 
 
 
-#endif // _N47_LOKILIKE_HEADER_INCLUDED_120knjvcaasd823mn_
+#endif // _N47_LOKI_HEADER_INCLUDED_
