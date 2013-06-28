@@ -12,9 +12,9 @@ dukascopy.o: builddir ./src/dukascopy.cpp
 	$(CXX) $(CXX_OPTS) $(INCLUDE_DIR) $(LIBS)  -c ./src/dukascopy.cpp -o ./build/dukascopy.o
 
 tests: dukascopy.o
-	$(CXX) $(CXX_OPTS) $(INCLUDE_DIR) ./build/dukascopy.o ./test/test_bytesTo.cpp  -o ./build/test_bytesTo $(LIBS) -DTEST_DATA_PREFOX=$(PWD)/
-	$(CXX) $(CXX_OPTS) $(INCLUDE_DIR) ./build/dukascopy.o ./test/test_read_bin.cpp -o ./build/test_read_bin $(LIBS) -DTEST_DATA_PREFIX=$(PWD)/
-	$(CXX) $(CXX_OPTS) $(INCLUDE_DIR) ./build/dukascopy.o ./test/test_read_bi5.cpp -o ./build/test_read_bi5 $(LIBS) -DTEST_DATA_PREFIX=$(PWD)/
+	$(CXX) $(CXX_OPTS) $(INCLUDE_DIR) ./build/dukascopy.o ./test/test_bytesTo.cpp  -o ./build/test_bytesTo $(LIBS) -DTEST_DATA_PREFIX=$(PWD)/ && ./build/test_bytesTo
+	$(CXX) $(CXX_OPTS) $(INCLUDE_DIR) ./build/dukascopy.o ./test/test_read_bin.cpp -o ./build/test_read_bin $(LIBS) -DTEST_DATA_PREFIX=$(PWD)/ && ./build/test_read_bin
+	$(CXX) $(CXX_OPTS) $(INCLUDE_DIR) ./build/dukascopy.o ./test/test_read_bi5.cpp -o ./build/test_read_bi5 $(LIBS) -DTEST_DATA_PREFIX=$(PWD)/ && ./build/test_read_bi5
 
 clean:
 	rm -rf build
