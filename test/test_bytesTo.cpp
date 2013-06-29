@@ -5,28 +5,33 @@
 
 int main(void) {
 
-    n47::bytesTo<float, n47::LittleEndian> bytesTo_float_little;
-    n47::bytesTo<float, n47::BigEndian> bytesTo_float_big;
+    n47::bytesTo<unsigned int, n47::LittleEndian> bytesTo_ui_little;
+    n47::bytesTo<unsigned int, n47::BigEndian> bytesTo_ui_big;
 
-    char lit[4] = { 0x66, 0x66, 0x86, 0x3F };
-    char big[4] = { 0x3F, 0x86, 0x66, 0x66 };
-    unsigned int target = 1065772646;
+    char le[4] = { 0x00, 0x00, 0x00, 0x01 };
+    char be[4] = { 0x01, 0x00, 0x00, 0x00 };
+    unsigned int target = 16777216;
+    unsigned int target_error = 1;
+    unsigned int result;
 
     printf("target: %d\n",  target);
+    result = bytesTo_ui_little(le);
+    printf("bytesTo_ui_little(le) => %d\n", result);
+    if (result != target) return 2;
 
-    float result = bytesTo_float_little(big);
-    printf("result: %3.3f\n", result);
-    result = bytesTo_float_big(big);
-    printf("result: %3.3f\n", result);
+    result = bytesTo_ui_little(be);
+    printf("bytesTo_ui_little(be) => %d\n", result);
+    if (result != target_error) return 2;
 
-    float value = 0.0;
-    int index;
+    result = bytesTo_ui_big(be);
+    printf("bytesTo_ui_big(be) => %d\n", result);
+    if (result != target) return 2;
 
-    for (index = 0; index < sizeof(float); index++) {
-        ((char*) &value)[index] = big[4 - 1 - index];
-    }
-    printf("result: %3.3f\n", value);
-    return 0;
+    result = bytesTo_ui_big(le);
+    printf("bytesTo_ui_big(le) => %d\n", result);
+    if (result != target_error) return 2;
+
+   return 0;
 }
 
 
