@@ -15,11 +15,146 @@
 
 #include <lzma.h>
 
+
 namespace n47 {
 
+namespace  {
 
-#define N47_LITTLE_ENDIAN 0
-#define N47_BIG_ENDIAN 1
+struct _lzma_exception {
+    _lzma_exception(int errorno, const char* msg)
+    : errorno(errorno), msg(msg)
+    {}
+
+    _lzma_exception(const _lzma_exception &rhs)
+    : errorno(rhs.errorno), msg(rhs.msg)
+    {}
+
+    int errorno;
+    const char *msg;
+};
+
+
+/**
+* \brief    Initialise the LZMA input stream.
+*
+* This is a local helper function.
+*
+* \param    stream Pointer to an uninitiliased lzma_stream.
+*
+*/
+void _lzma_init_decoder(lzma_stream *stream) {
+    lzma_ret ret = lzma_stream_decoder(
+            stream, UINT64_MAX, LZMA_CONCATENATED);
+
+    switch (ret) {
+    case LZMA_OK:
+        // Do Nothing all is good with the world!
+        break;
+    case LZMA_MEM_ERROR:
+        throw _lzma_exception(LZMA_MEM_ERROR, "Memory allocation failed");
+        break;
+    case LZMA_FORMAT_ERROR:
+        throw _lzma_exception(LZMA_FORMAT_ERROR, "The input is not in the .xz format");
+        break;
+    case LZMA_OPTIONS_ERROR:
+        throw _lzma_exception(LZMA_OPTIONS_ERROR, "Unsupported compression options");
+        break;
+    case LZMA_DATA_ERROR:
+        throw _lzma_exception(LZMA_DATA_ERROR, "Compressed file is corrupt");
+        break;
+    case LZMA_BUF_ERROR:
+        throw _lzma_exception(LZMA_BUF_ERROR, "Compressed file is truncated or otherwise corrupt");
+        break;
+    default:
+        throw _lzma_exception(-1, "Unkown error. Possibly a big with liblzma!");
+    }
+}
+
+
+
+void _lzma_decompress_to_buffer(lzma_stream *stream, FILE *fin, std::vector<uint8_t> *buffer) {
+    lzma_ret ret;
+    lzma_action action = LZMA_RUN;
+
+    uint8_t inbuffer[BUFSIZ];
+    uint8_t outbuffer[BUFSIZ];
+
+    stream->next_in = NULL;
+    stream->avail_in = 0;
+    stream->next_out = outbuffer;
+    stream->avail_out = sizeof(outbuffer);
+
+    while (true) {
+        if (stream->avail_in == 0 && !feof(fin)) {
+            stream->next_in = inbuffer;
+            stream->avail_in = fread(inbuffer, 1, sizeof(inbuffer), fin);
+
+            if (ferror(fin)) {
+                throw _lzma_exception(-1, "Error read from input file.");
+            }
+
+            if (feof(fin)) {
+                action = LZMA_FINISH;
+            }
+            printf("\tbuffered some data\n");
+        }
+        ret = lzma_code(stream, action);
+
+        if (stream->avail_out == 0 || ret == LZMA_STREAM_END) {
+            size_t write_size = sizeof(outbuffer) - stream->avail_out;
+            for (size_t i = 0; i < write_size; i++) {
+                buffer->push_back( outbuffer[i] );
+            }
+            stream->next_out = outbuffer;
+            stream->avail_out = sizeof(outbuffer);
+        }
+
+        printf("\tdecoded some data\n");
+        if (ret == LZMA_STREAM_END) {
+            printf("\tStream end.\n");
+            break;
+        }
+
+        if (ret != LZMA_OK) {
+            switch (ret) {
+            case LZMA_MEM_ERROR:
+                throw _lzma_exception(LZMA_MEM_ERROR, "Memory allocation failed");
+                break;
+            case LZMA_FORMAT_ERROR:
+                throw _lzma_exception(LZMA_FORMAT_ERROR, "The input is not in the .xz format");
+                break;
+            case LZMA_OPTIONS_ERROR:
+                throw _lzma_exception(LZMA_OPTIONS_ERROR, "Unsupported compression options");
+                break;
+            case LZMA_DATA_ERROR:
+                throw _lzma_exception(LZMA_DATA_ERROR, "Compressed file is corrupt");
+                break;
+            case LZMA_BUF_ERROR:
+                throw _lzma_exception(LZMA_BUF_ERROR, "Compressed file is truncated or otherwise corrupt");
+                break;
+            default:
+                throw _lzma_exception(-1, "Unknown error, possibly a bug");
+                break;
+            }
+        }
+    } // while (true)
+}
+
+_lzma_exception last_error(0,0);
+
+
+} // private
+
+
+const char *last_error_msg() {
+    return last_error.msg == 0 ? "None" : last_error.msg;
+}
+
+
+int last_error_num() {
+    return last_error.errorno;
+}
+
 
 tick *tickFromBuffer(char *buffer, time_t epoch, float digits, size_t offset){
     bytesTo<unsigned int, n47::BigEndian> bytesTo_unsigned;
@@ -55,72 +190,31 @@ tick_data* read_bin(char *buffer, size_t buffer_size, time_t epoch, float point_
 
 
 
+tick_data* read_bi5(FILE *lzma_fin, time_t epoch, float point_value) {
+    lzma_stream stream = LZMA_STREAM_INIT;
+    std::vector<uint8_t> *buffer = new std::vector<uint8_t>();
 
-tick_data* read_bi5(char *lzma_filename, time_t epoch, float point_value) {
-    lzma_stream strm = LZMA_STREAM_INIT;
-    lzma_ret lzret;
-    size_t n, index;
-
-    std::vector<char> buffer;
-    char *cbuffer;
-
-    lzret = lzma_stream_decoder(&strm, UINT64_MAX, LZMA_CONCATENATED);
-
-    if (lzret != LZMA_OK)
+    if ( lzma_fin == 0 ) {
+        last_error.errorno = -1;
+        last_error.msg = "File pointer is null";
         return 0;
-
-    FILE *fin = fopen(lzma_filename, "rb");
-
-    if (fin == 0)
-        return 0;
-
-
-    lzma_action action = LZMA_RUN;
-    uint8_t inbuf[BUFSIZ];
-    uint8_t outbuf[BUFSIZ];
-
-    strm.next_in = 0;
-    strm.avail_in = 0;
-    strm.next_out = outbuf;
-    strm.avail_out = sizeof(outbuf);
-
-    while (true) {
-        if (strm.avail_in == 0 && !feof(fin)) {
-            strm.next_in = inbuf;
-            strm.avail_in = fread(inbuf, 1, sizeof(inbuf), fin);
-            if (ferror(fin)) {
-                return 0;
-            }
-
-            if (feof(fin)) {
-                action = LZMA_FINISH;
-            }
-        }
-
-        lzret = lzma_code(&strm, action);
-        if (strm.avail_out == 0 || lzret == LZMA_STREAM_END) {
-            n = sizeof(outbuf) - strm.avail_out;
-
-            for (index = 0; index < n; index++) {
-                buffer.push_back( outbuf[index] );
-            }
-            strm.next_out = outbuf;
-            strm.avail_out = sizeof(outbuf);
-        }
-        if (lzret == LZMA_STREAM_END) {
-            break;
-        }
-        if (lzret != LZMA_OK) {
-            return 0;
-        }
     }
-    fclose(fin);
 
-    cbuffer = new char[ buffer.size() ];
-    std::copy(buffer.begin(), buffer.end(), cbuffer);
+    try {
+        _lzma_init_decoder(&stream);
+        _lzma_decompress_to_buffer(&stream, lzma_fin, buffer);
+    } catch (_lzma_exception &ex) {
+        last_error = ex;
+        delete buffer;
+        return 0;
+    }
 
-    tick_data *td = read_bin(cbuffer, buffer.size(), epoch, point_value);
+    uint8_t *cbuffer = new uint8_t[ buffer->size() ];
+    std::copy(buffer->begin(), buffer->end(), cbuffer);
+    tick_data *td = read_bin((char*) cbuffer, buffer->size(), epoch, point_value);
 
+    delete buffer;
+    delete [] cbuffer;
     return td;
 }
 

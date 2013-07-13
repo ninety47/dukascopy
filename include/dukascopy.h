@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <ctime>
+#include <cstdio>
 
 #include "../include/loki.hpp"
 
@@ -75,13 +76,20 @@ struct bytesTo<U, LittleEndian>{
 };
 
 
+const char *last_error_msg();
+
+
+int last_error_num();
+
+
 tick* tickFromBuffer(char *buffer, time_t epoch, float digits, size_t offset=0);
 
 
 tick_data* read_bin(char *buffer, size_t buffer_size, time_t epoch, float point_value);
 
 
-tick_data* read_bi5(char *lzma_filename, time_t epoch, float point_value);
+tick_data* read_bi5(FILE *lzma_fin, time_t epoch, float point_value);
+
 
 } // namespace n47
 
