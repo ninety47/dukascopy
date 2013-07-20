@@ -1,7 +1,7 @@
 CXX = g++
 CXX_OPTS = -Wall -fPIC
 INCLUDE_DIR = -I./include
-LIBS = -llzma -lboost_system -lboost_filesystem
+LIBS = -lboost_system -lboost_filesystem
 SO_NAME = libn47_dukascopy.so.0.1
 PWD ?= `pwd`
 
