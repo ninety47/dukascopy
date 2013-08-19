@@ -75,3 +75,5 @@ if (Boost_FOUND)
         target_link_libraries(${target} dukascopy ${Boost_LIBRARIES})
     endforeach(tp)
 endif()
+
+add_subdirectory(opt/easylzma)
