@@ -1,45 +1,77 @@
+cmake_minimum_required(VERSION 2.8.7)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+project(libdukascopy)
+set(NINETY47 ninety47)
+set(LIBDUKASCOPY_MAJOR 0)
+set(LIBDUKASCOPY_MINOR 1)
+set(LIBDUKASCOPY_MICRO 0)
+set(LIBDISTNAME 
+    "${NINETY47}-dukascopy-${LIBDUKASCOPY_MAJOR}.${LIBDUKASCOPY_MINOR}.${LIBDUKASCOPY_MICRO}")
+set(LIBDIR "${CMAKE_CURRENT_BINARY_DIR}/${LIBDISTNAME}/lib")
+set(INCDIR "${CMAKE_CURRENT_BINARY_DIR}/${LIBDISTNAME}/include/${NINETY47}")
+set(CMAKE_C_FLAGS "-Wall")
 
-PROJECT(libduksacopy)
-SET (NINETY47 ninety47)
-SET (LIBDUKASCOPY_MAJOR 0)
-SET (LIBDUKASCOPY_MINOR 1)
-SET (LIBDUKASCOPY_MICRO 1)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${LIBDISTNAME}/lib)
+set(LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/${LIBDISTNAME}/lib")
 
-SET (LIBDUKASCOPY_DIST_NAME
-     "duksacopy-${LIBDUKASCOPY_MAJOR}.${LIBDUKASCOPY_MINOR}.${LIBDUKASCOPY_MICRO}")
+# External library dependencies...
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USER_STATIC_RUNTIME OFF)
+find_package(Boost REQUIRED COMPONENTS system filesystem )
 
-IF (NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE "Release")
-ENDIF (NOT CMAKE_BUILD_TYPE)
 
-IF (${CMAKE_BUILD_TYPE} STREQUAL "Release")
-  MESSAGE("** for a debug build: cmake -DCMAKE_BUILD_TYPE=Debug ..")
-ENDIF (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+# Shared object and static library building
+include_directories("${CMAKE_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR})
+add_library(dukascopy_s STATIC src/dukascopy.cpp include/ninety47/dukascopy.h)
+add_library(dukascopy SHARED src/dukascopy.cpp include/ninety47/dukascopy.h)
 
-SET(CMAKE_C_FLAGS "-Wall")
-IF (WIN32)
-  SET(linkFlags "/PDB:NONE /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF")
-  SET(CMAKE_EXE_LINKER_FLAGS    "${linkFlags}"
-      CACHE STRING "LIBDUKASCOPY linker flags" FORCE)
-  SET(CMAKE_EXE_LINKER_FLAGS_DEBUG ""
-      CACHE STRING "LIBDUKASCOPY debug linker flags" FORCE)
-  SET(CMAKE_EXE_LINKER_FLAGS_RELEASE
-      CACHE STRING "LIBDUKASCOPY release linker flags" FORCE)
-  SET(CMAKE_SHARED_LINKER_FLAGS "${linkFlags}"
-      CACHE STRING "LIBDUKASCOPY shared linker flags" FORCE)
-  SET(CMAKE_MODULE_LINKER_FLAGS "${linkFlags}"
-      CACHE STRING "LIBDUKASCOPY module linker flags" FORCE)
+set_target_properties(
+    dukascopy PROPERTIES
+    OUTPUT_NAME "${NINETY47}_dukascopy"
+    SOVERSION ${LIBDUKASCOPY_MAJOR}
+    VERSION ${LIBDUKASCOPY_MAJOR}.${LIBDUKASCOPY_MINOR}.${LIBDUKASCOPY_MICRO}
+)
+set_target_properties(dukascopy_s PROPERTIES
+    OUTPUT_NAME "${NINETY47}_dukascopy"
+)
 
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4668 /wd4820 /wd4996 /wd4255 /wd4130 /wd4100 /wd4711")
-  SET(CMAKE_C_FLAGS_DEBUG "/D DEBUG /Od /Z7")
-  SET(CMAKE_C_FLAGS_RELEASE "/D NDEBUG /O2")
-ELSE (WIN32)
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -ansi")
-  SET(CMAKE_C_FLAGS_DEBUG "-DDEBUG -g")
-  SET(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -O2")
-ENDIF (WIN32)
+target_link_libraries(dukascopy ${Boost_LIBRARIES})
+target_link_libraries(dukascopy_s ${Boost_LIBRARIES})
+# Copy over public header...
+file(MAKE_DIRECTORY ${INCDIR})
+file(COPY ./include/ninety47/dukascopy.h DESTINATION ${INCDIR})
 
-ADD_SUBDIRECTORY(src)
-ADD_SUBDIRECTORY(test)
+#
+# dukascopy utils..
+#
+
+#file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${LIBDISTNAME}/bin)
+#add_executable(hello ./bin/main.cpp)
+#set_target_properties(hello  PROPERTIES
+#    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin"
+#    COMPILE_FLAGS "-I./include"
+#)
+#target_link_libraries(hello world)
+
+
+#
+# Tests....
+#
+file(GLOB tests_src RELATIVE "${CMAKE_SOURCE_DIR}/test" "${CMAKE_SOURCE_DIR}/test/*.cpp")
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test)
+file(COPY ./test/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
+
+if (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    foreach(tp ${tests_src})
+        string(REGEX REPLACE ".cpp" "" target ${tp})
+        add_executable(${target} "./test/${tp}")
+        set_target_properties(
+            ${target} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test"
+            COMPILE_FLAGS "-I./include"
+        )
+        target_link_libraries(${target} dukascopy ${Boost_LIBRARIES})
+    endforeach(tp)
+endif()

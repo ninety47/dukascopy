@@ -1,20 +1,18 @@
-
 #ifndef _ninety47_libbi5_header_109823as0920fs8_
 #define _ninety47_libbi5_header_109823as0920fs8_
 
 #include <vector>
 #include <ctime>
 #include <cstdio>
-
-#include "../include/loki.hpp"
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace n47 {
 
+namespace pt = boost::posix_time;
+
+
 #define PV_YEN_PAIR 0.001
 #define PV_DOLLAR_PAIR 0.00001
-
-
-const int ROW_SIZE = ::n47::loki::SizeOf< TYPELIST_5(unsigned int, int, int, int, int) >::value;
 
 struct tick;
 
@@ -24,21 +22,21 @@ typedef std::vector<tick*>::iterator tick_data_iterator;
 
 struct tick {
 
-    tick(time_t epoch_, unsigned int tts, float a, float b, float av, float bv)
-    : epoch(epoch_), ts(tts), ask(a), bid(b), askv(av), bidv(bv)
+    tick(pt::ptime epoch_, pt::time_duration ms, float a, float b, float av, float bv)
+    : epoch(epoch_), td(ms), ask(a), bid(b), askv(av), bidv(bv)
     {}
 
     tick(const tick& rhs) {
         epoch = rhs.epoch;
-        ts = rhs.ts;
+        td = rhs.td;
         ask =  rhs.ask;
         bid = rhs.bid;
         askv = rhs.askv;
         bidv = rhs.bidv;
     }
 
-    time_t epoch;
-    unsigned int ts;
+    pt::ptime epoch;
+    pt::time_duration td;
     float ask, bid;
     float askv, bidv;
 };
@@ -46,6 +44,7 @@ struct tick {
 
 struct BigEndian {};
 struct LittleEndian {};
+
 template <typename T, class endian>
 struct bytesTo {
     T operator()(char *buffer);
@@ -76,16 +75,10 @@ struct bytesTo<U, LittleEndian>{
 };
 
 
-const char *last_error_msg();
+tick* tickFromBuffer(char *buffer, pt::ptime epoch, float digits, size_t offset=0);
 
 
-int last_error_num();
-
-
-tick* tickFromBuffer(char *buffer, time_t epoch, float digits, size_t offset=0);
-
-
-tick_data* read_bin(char *buffer, size_t buffer_size, time_t epoch, float point_value);
+tick_data* read_bin(char *buffer, size_t buffer_size, pt::ptime epoch, float point_value);
 
 
 } // namespace n47

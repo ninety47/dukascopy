@@ -1,5 +1,5 @@
 
-#include "dukascopy.h"
+#include <ninety47/dukascopy.h>
 #include <cstdio>
 
 

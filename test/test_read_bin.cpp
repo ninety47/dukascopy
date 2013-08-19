@@ -1,10 +1,13 @@
 
-#include <dukascopy.h>
+#include <ninety47/dukascopy.h>
+#include <ninety47/defs.h>
+
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include <fstream>
-#include <ctime>
 #include <iomanip>
 #include <cstring>
 
@@ -12,21 +15,12 @@
 #define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
 
 #ifndef TEST_DATA_PREFIX
-#define TEST_DATA_PREFIX .
+#define TEST_DATA_PREFIX ..
 #endif
 
 namespace fs = boost::filesystem;
-
-std::time_t get_epoch(int yr, int mnth, int day, int hour, int min, int sec) {
-    struct tm ts;
-    ts.tm_year = yr;
-    ts.tm_mon = mnth;
-    ts.tm_mday = day;
-    ts.tm_hour = hour;
-    ts.tm_min = min;
-    ts.tm_sec = sec;
-    return std::mktime(&ts);
-}
+namespace pt = boost::posix_time;
+namespace gr = boost::gregorian;
 
 
 int main(void) {
@@ -37,7 +31,6 @@ int main(void) {
     int counter;
 
     char filename[ strlen(test_data_prefix) + strlen(test_data_suffix) + 1 ];
-    //strcat( filename, test_data_prefix );
     snprintf(filename, sizeof(filename), "%s%s", test_data_prefix, test_data_suffix);
 
     fs::path p(filename);
@@ -59,7 +52,7 @@ int main(void) {
         std::cout << "Error: only read " << fin.gcount() << " bytes from the file." << std::endl;
     }
     fin.close();
-    std::time_t epoch = get_epoch(2012, 11, 3, 0, 0, 0);
+    pt::ptime epoch(gr::date(2012, 12, 3), pt::hours(1));
     n47::tick_data *data = n47::read_bin(buffer, buffer_size, epoch, PV_YEN_PAIR);
     n47::tick_data_iterator iter;
 
@@ -67,10 +60,10 @@ int main(void) {
         std::cout << std::setfill('0') << std::setw(2) << std::hex << (int) buffer[i] << " ";
     std::cout << std::dec << std::endl;
 
-    std::cout << "epoch, ts, ask, vol, bid, vol" << std::endl;
+    std::cout << "time, ask, vol, bid, vol" << std::endl;
     counter = 0;
     for (iter = data->begin(); iter != data->end(); iter++) {
-        std::cout << (*iter)->epoch + (*iter)->ts << ", "
+        std::cout << ((*iter)->epoch + (*iter)->td) << ", "
                   << (*iter)->bid << ", " << (*iter)->bidv << ", "
                   << (*iter)->ask << ", " << (*iter)->askv << std::endl;
         counter++;
