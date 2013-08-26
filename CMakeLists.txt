@@ -20,9 +20,8 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USER_STATIC_RUNTIME OFF)
 find_package(Boost REQUIRED COMPONENTS system filesystem )
 
-
 # Shared object and static library building
-include_directories("${CMAKE_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR})
+include_directories("${CMAKE_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/opt/easylzma/src)
 add_library(dukascopy_s STATIC src/dukascopy.cpp include/ninety47/dukascopy.h)
 add_library(dukascopy SHARED src/dukascopy.cpp include/ninety47/dukascopy.h)
 
@@ -36,8 +35,8 @@ set_target_properties(dukascopy_s PROPERTIES
     OUTPUT_NAME "${NINETY47}_dukascopy"
 )
 
-target_link_libraries(dukascopy ${Boost_LIBRARIES})
-target_link_libraries(dukascopy_s ${Boost_LIBRARIES})
+target_link_libraries(dukascopy ${Boost_LIBRARIES} easylzma)
+target_link_libraries(dukascopy_s ${Boost_LIBRARIES} easylzma)
 # Copy over public header...
 file(MAKE_DIRECTORY ${INCDIR})
 file(COPY ./include/ninety47/dukascopy.h DESTINATION ${INCDIR})
@@ -53,6 +52,9 @@ file(COPY ./include/ninety47/dukascopy.h DESTINATION ${INCDIR})
 #    COMPILE_FLAGS "-I./include"
 #)
 #target_link_libraries(hello world)
+
+# Build dependencies
+add_subdirectory(opt/easylzma)
 
 
 #
@@ -72,8 +74,7 @@ if (Boost_FOUND)
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/test"
             COMPILE_FLAGS "-I./include"
         )
-        target_link_libraries(${target} dukascopy ${Boost_LIBRARIES})
+        target_link_libraries(${target} dukascopy ${Boost_LIBRARIES} easylzma)
     endforeach(tp)
 endif()
 
-add_subdirectory(opt/easylzma)

@@ -8,8 +8,8 @@ int main(void) {
     n47::bytesTo<unsigned int, n47::LittleEndian> bytesTo_ui_little;
     n47::bytesTo<unsigned int, n47::BigEndian> bytesTo_ui_big;
 
-    char le[4] = { 0x00, 0x00, 0x00, 0x01 };
-    char be[4] = { 0x01, 0x00, 0x00, 0x00 };
+    unsigned char le[4] = { 0x00, 0x00, 0x00, 0x01 };
+    unsigned char be[4] = { 0x01, 0x00, 0x00, 0x00 };
     unsigned int target = 16777216;
     unsigned int target_error = 1;
     unsigned int result;

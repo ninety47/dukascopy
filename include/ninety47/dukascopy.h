@@ -47,16 +47,16 @@ struct LittleEndian {};
 
 template <typename T, class endian>
 struct bytesTo {
-    T operator()(char *buffer);
+    T operator()(unsigned char *buffer);
 };
 
 template <typename T>
 struct bytesTo<T, BigEndian>{
-    T operator()(char *buffer) {
+    T operator()(unsigned char *buffer) {
         T value;
         size_t index;
         for (index = sizeof(T); index > 0; index--) {
-            ((char*) &value)[ sizeof(T) - index ]  =  *(buffer + index - 1);
+            ((unsigned char*) &value)[ sizeof(T) - index ]  =  *(buffer + index - 1);
         }
         return value;
     }
@@ -64,21 +64,21 @@ struct bytesTo<T, BigEndian>{
 
 template <typename U>
 struct bytesTo<U, LittleEndian>{
-    U operator()(char *buffer) {
+    U operator()(unsigned char *buffer) {
         U value;
         size_t index;
         for (index = 0; index < sizeof(U); index++) {
-            ((char*) &value)[ index ] = *(buffer + index);
+            ((unsigned char*) &value)[ index ] = *(buffer + index);
         }
         return value;
     }
 };
 
 
-tick* tickFromBuffer(char *buffer, pt::ptime epoch, float digits, size_t offset=0);
+tick* tickFromBuffer(unsigned char *buffer, pt::ptime epoch, float digits, size_t offset=0);
 
 
-tick_data* read_bin(char *buffer, size_t buffer_size, pt::ptime epoch, float point_value);
+tick_data* read_bin(unsigned char *buffer, size_t buffer_size, pt::ptime epoch, float point_value);
 
 
 } // namespace n47

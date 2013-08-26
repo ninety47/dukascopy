@@ -24,7 +24,7 @@ namespace gr = boost::gregorian;
 
 
 int main(void) {
-    char *buffer;
+    unsigned char *buffer;
     size_t buffer_size;
     const char *test_data_prefix = STRINGIZE_VALUE_OF(TEST_DATA_PREFIX);
     const char *test_data_suffix = "/test/data/raw/GBPJPY/2012/11/03/01h_ticks.bin";
@@ -36,7 +36,7 @@ int main(void) {
     fs::path p(filename);
     if ( fs::exists(p) && fs::is_regular(p)  ) {
         buffer_size = fs::file_size(p);
-        buffer = new char[ buffer_size ];
+        buffer = new unsigned char[ buffer_size ];
     } else {
         std::cout << "Error: couldn't access the data file. |" << filename << "|" <<  std::endl;
         return 2;
@@ -44,7 +44,7 @@ int main(void) {
 
     std::ifstream fin;
     fin.open(filename, std::ifstream::binary);
-    fin.read(buffer, buffer_size);
+    fin.read( reinterpret_cast<char*>(buffer), buffer_size);
 
     if (fin) {
         std::cout << "Read " << buffer_size << " bytes." << std::endl;

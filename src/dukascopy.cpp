@@ -14,6 +14,7 @@ namespace n47 {
 namespace pt = boost::posix_time;
 
 tick *tickFromBuffer(char *buffer, pt::ptime epoch, float digits, size_t offset){
+tick *tickFromBuffer(unsigned char *buffer, pt::ptime epoch, float digits, size_t offset){
     bytesTo<unsigned int, n47::BigEndian> bytesTo_unsigned;
     bytesTo<float, n47::BigEndian> bytesTo_float;
 
@@ -32,7 +33,7 @@ tick *tickFromBuffer(char *buffer, pt::ptime epoch, float digits, size_t offset)
 }
 
 
-tick_data* read_bin(char *buffer, size_t buffer_size, pt::ptime epoch, float point_value) {
+tick_data* read_bin(unsigned char *buffer, size_t buffer_size, pt::ptime epoch, float point_value) {
     std::vector<tick*> *data = new std::vector<tick*>();
     std::vector<tick*>::iterator iter;
 
