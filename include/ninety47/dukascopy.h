@@ -81,6 +81,9 @@ tick* tickFromBuffer(unsigned char *buffer, pt::ptime epoch, float digits, size_
 tick_data* read_bin(unsigned char *buffer, size_t buffer_size, pt::ptime epoch, float point_value);
 
 
+tick_data* read_bi5(unsigned char *lzma_buffer, size_t lzma_buffer_size, pt::ptime epoch, float point_value, size_t *buffer_size);
+
+
 } // namespace n47
 
 #endif
