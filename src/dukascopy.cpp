@@ -51,22 +51,21 @@ tick_data* read_bin(unsigned char *buffer, size_t buffer_size, pt::ptime epoch, 
 }
 
 
-tick_data* read_bi5(unsigned char *lzma_buffer, size_t lzma_buffer_size, pt::ptime epoch, float point_value, size_t *buffer_size) {
-    //unsigned char *buffer = 0;
-    size_t outSize = 0;
+tick_data* read_bi5(unsigned char *lzma_buffer, size_t lzma_buffer_size, pt::ptime epoch, float point_value, size_t &bytes_read) {
+    tick_data *result = 0;
 
     // decompress
     int status;
-    unsigned char *buffer = n47::lzma::decompress(lzma_buffer, lzma_buffer_size, &status, &outSize);
+    unsigned char *buffer = n47::lzma::decompress(lzma_buffer, lzma_buffer_size, status, bytes_read);
 
     if (status != N47_E_OK) {
-        *buffer_size = 0;
-        return 0;
+        bytes_read = 0;
     } else {
-        *buffer_size = outSize;
         // convert to tick data (with read_bin).
-        return read_bin(buffer, outSize, epoch, point_value);
+        result = read_bin(buffer, bytes_read, epoch, point_value);
+        delete [] buffer;
     }
+    return result;
 }
 
 

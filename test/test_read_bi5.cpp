@@ -54,7 +54,7 @@ int main(void) {
     }
     fin.close();
     pt::ptime epoch(gr::date(2012, 12, 3), pt::hours(1));
-    n47::tick_data *data = n47::read_bi5(buffer, buffer_size, epoch, PV_YEN_PAIR, &raw_size);
+    n47::tick_data *data = n47::read_bi5(buffer, buffer_size, epoch, PV_YEN_PAIR, raw_size);
     n47::tick_data_iterator iter;
 
     if ( data == 0 ) {
