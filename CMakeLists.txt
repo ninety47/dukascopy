@@ -20,10 +20,14 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USER_STATIC_RUNTIME OFF)
 find_package(Boost REQUIRED COMPONENTS system filesystem )
 
+# Build dependencies
+add_subdirectory(opt/easylzma)
+
 # Shared object and static library building
+file(GLOB lib_src "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/src/*.cpp")
 include_directories("${CMAKE_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/opt/easylzma/src)
-add_library(dukascopy_s STATIC src/dukascopy.cpp include/ninety47/dukascopy.h)
-add_library(dukascopy SHARED src/dukascopy.cpp include/ninety47/dukascopy.h)
+add_library(dukascopy SHARED ${lib_src})
+add_library(dukascopy_s STATIC ${lib_src})
 
 set_target_properties(
     dukascopy PROPERTIES
@@ -52,9 +56,6 @@ file(COPY ./include/ninety47/dukascopy.h DESTINATION ${INCDIR})
 #    COMPILE_FLAGS "-I./include"
 #)
 #target_link_libraries(hello world)
-
-# Build dependencies
-add_subdirectory(opt/easylzma)
 
 
 #
