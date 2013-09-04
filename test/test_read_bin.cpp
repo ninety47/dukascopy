@@ -60,10 +60,10 @@ int main(void) {
         std::cout << std::setfill('0') << std::setw(2) << std::hex << (int) buffer[i] << " ";
     std::cout << std::dec << std::endl;
 
-    std::cout << "time, ask, vol, bid, vol" << std::endl;
+    std::cout << "epoch, ms, bid, bid_vol, ask, ask_vol" << std::endl;
     counter = 0;
     for (iter = data->begin(); iter != data->end(); iter++) {
-        std::cout << ((*iter)->epoch + (*iter)->td) << ", "
+        std::cout << ((*iter)->epoch + (*iter)->td) << ", " << (*iter)->td << " ms, "
                   << (*iter)->bid << ", " << (*iter)->bidv << ", "
                   << (*iter)->ask << ", " << (*iter)->askv << std::endl;
         counter++;
