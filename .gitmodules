@@ -1,6 +1,3 @@
-[submodule "opt/unittest-cpp"]
-	path = opt/unittest-cpp
-	url = https://github.com/ninety47/unittest-cpp.git
 [submodule "opt/easylzma"]
 	path = opt/easylzma
 	url = https://github.com/ninety47/easylzma.git
