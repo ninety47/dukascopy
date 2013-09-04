@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 
+#include "ninety47/dukascopy.h"
 #include "ninety47/dukascopy/lzma.h"
 
 
@@ -51,6 +52,7 @@ int inputCallback(void *ctx, void *buf, size_t *size) {
     return 0;
 }
 
+#include <iostream>
 
 unsigned char *decompress(unsigned char *inBuffer, size_t inSize, int &status, size_t &outSize) {
     unsigned char *outBuffer = 0;
@@ -81,11 +83,11 @@ unsigned char *decompress(unsigned char *inBuffer, size_t inSize, int &status, s
 }
 
 
-bool bufferIsLZMA(unsigned char properties)
+bool bufferIsLZMA(const unsigned char *buffer, size_t size)
 /*
-   LZMA detection based upon properties bytes in the header. Extracted
-   from the LZMA file format documentation copied into this /docs and from
-   this URL:
+   LZMA detection based upon properties byte in the header and the
+   uncompressed size. The LZMA file format documentation can be
+   found in /docs and from this URL:
 
    http://svn.python.org/projects/external/xz-5.0.3/doc/lzma-file-format.txt
    [Downloaded on the 29 August 2013]
@@ -100,37 +102,41 @@ bool bufferIsLZMA(unsigned char properties)
 
    The properties are encoded using the following formula:
 
-   Properties = (pb * 5 + lp) * 9 + lc
+   properties = (pb * 5 + lp) * 9 + lc
 
-   The following C code illustrates a straightforward way to
-   decode the Properties field:
+   The uncompressed size is a 64-bit little endian stored unsigned integer.
+   I've applied the logic that, if the uncompressed size:
 
-   uint8_t lc, lp, pb;
-   uint8_t prop = get_lzma_properties();
-   if (prop > (4 * 5 + 4) * 9 + 8)
-       return LZMA_PROPERTIES_ERROR;
-
-   pb = prop / (9 * 5);
-   prop -= pb * 9 * 5;
-   lp = prop / 9;
-   lc = prop - lp * 9;
-
-   So I've just replicated the above code with some tweaks
-   and extra checks.
+   1) is 0xFFFFFFFFFFFFFFFF (decompressed size is unknown) or
+   2) is in [(buffer size) - (header size), 10 * (buffer size) - (header size)]
+      where 10 is a guess at the upper limit of LZMA compression performance
+      for the Dukascopy binary files.
 */
 {
     static const unsigned char LZMA_PROPERTIES_MAX = 224; // (4 * 5 + 4) * 9 + 8
-    unsigned char lc, lp, pb;
+    n47::bytesTo<uint64_t, n47::LittleEndian> bytesTo_uint64_t;
+    unsigned char properties, lc, lp, pb;
+    uint64_t uncompressed_size;
+    bool is_lzma = false;
 
-    if (properties > LZMA_PROPERTIES_MAX)
-        return false;
+    // Check the properties fields..
+    properties = *buffer;
+    if (properties <= LZMA_PROPERTIES_MAX) {
+        pb = properties / (9 * 5);
+        properties -= pb * 9 * 5;
+        lp = properties / 9;
+        lc = properties - lp * 9;
+        is_lzma =  _N47_ISIN(pb, 0, 8) && _N47_ISIN(lp, 0, 4) && _N47_ISIN(lc, 0, 4);
+    }
 
-    pb = properties / (9 * 5);
-    properties -= pb * 9 * 5;
-    lp = properties / 9;
-    lc = properties - lp * 9;
+    // Check the uncompressed size
+    if ( is_lzma ) {
+        uncompressed_size = bytesTo_uint64_t(buffer + 5);
+        is_lzma &= (uncompressed_size == 0xFFFFFFFFFFFFFFFF) ||
+                   (_N47_ISIN(uncompressed_size, static_cast<uint64_t>(size -  13), 10 * static_cast<uint64_t>(size -  13)));
+    }
 
-    return _N47_ISIN(pb, 0, 8) && _N47_ISIN(lp, 0, 4) && _N47_ISIN(lc, 0, 4);
+    return is_lzma;
 }
 
 } // namespace n47::lzma

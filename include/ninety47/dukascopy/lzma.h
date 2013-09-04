@@ -29,6 +29,8 @@ int inputCallback(void *ctx, void *buf, size_t *size);
 unsigned char *decompress(unsigned char *inBuffer, size_t inSize, int &status, size_t &outSize);
 
 
+bool bufferIsLZMA(const unsigned char *buffer, size_t size);
+
 } // namespace n47::lzma
 } // namespace n47
 

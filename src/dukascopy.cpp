@@ -5,6 +5,7 @@
 
 #include "ninety47/dukascopy.h"
 #include "ninety47/dukascopy/defs.h"
+#include "ninety47/dukascopy/io.hpp"
 #include "ninety47/dukascopy/lzma.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -16,6 +17,7 @@
 namespace n47 {
 
 namespace pt = boost::posix_time;
+
 
 tick *tickFromBuffer(unsigned char *buffer, pt::ptime epoch, float digits, size_t offset){
     bytesTo<unsigned int, n47::BigEndian> bytesTo_unsigned;
@@ -57,7 +59,6 @@ tick_data* read_bi5(unsigned char *lzma_buffer, size_t lzma_buffer_size, pt::pti
     // decompress
     int status;
     unsigned char *buffer = n47::lzma::decompress(lzma_buffer, lzma_buffer_size, status, bytes_read);
-
     if (status != N47_E_OK) {
         bytes_read = 0;
     } else {
@@ -68,6 +69,30 @@ tick_data* read_bi5(unsigned char *lzma_buffer, size_t lzma_buffer_size, pt::pti
     return result;
 }
 
+tick_data* read(const char *filename, pt::ptime epoch, float point_value, size_t &bytes_read) {
+    tick_data *result = 0;
+    size_t buffer_size = 0;
+    unsigned char *buffer = n47::io::loadToBuffer<unsigned char>(filename, buffer_size);
+
+    if ( buffer != 0 ) {
+        if ( n47::lzma::bufferIsLZMA(buffer, buffer_size) ) {
+            result = read_bi5(buffer, buffer_size, epoch, point_value, bytes_read);
+            // Reading in as bi5 failed lets double check its not binary data in the buffer.
+            if (result == 0) {
+                result = read_bin(buffer, buffer_size, epoch, point_value);
+            }
+        } else {
+            result = read_bin(buffer, buffer_size, epoch, point_value);
+            bytes_read = buffer_size;
+        }
+        delete [] buffer;
+
+        if ( result != 0 && result->size() != (bytes_read / n47::ROW_SIZE)) {
+            delete result;
+            result = 0;
+        }
+    }
+    return result;
+}
 
 } // namespace n47
-

@@ -4,6 +4,8 @@
 #include <vector>
 #include <ctime>
 #include <cstdio>
+#include <string>
+#include <sstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace n47 {
@@ -22,6 +24,10 @@ typedef std::vector<tick*>::iterator tick_data_iterator;
 
 struct tick {
 
+    tick()
+    : td(pt::millisec(0)), ask(0.0), bid(0.0), askv(0.0), bidv(0.0)
+    {}
+
     tick(pt::ptime epoch_, pt::time_duration ms, float a, float b, float av, float bv)
     : epoch(epoch_), td(ms), ask(a), bid(b), askv(av), bidv(bv)
     {}
@@ -33,6 +39,14 @@ struct tick {
         bid = rhs.bid;
         askv = rhs.askv;
         bidv = rhs.bidv;
+    }
+
+    std::string str() const {
+        std::stringstream strm;
+        strm << epoch << ", " << td.total_milliseconds()
+             << ask << ", " << askv << ", "
+             << bid << ", " << bidv;
+        return strm.str();
     }
 
     pt::ptime epoch;
@@ -47,12 +61,12 @@ struct LittleEndian {};
 
 template <typename T, class endian>
 struct bytesTo {
-    T operator()(unsigned char *buffer);
+    T operator()(const unsigned char *buffer);
 };
 
 template <typename T>
 struct bytesTo<T, BigEndian>{
-    T operator()(unsigned char *buffer) {
+    T operator()(const unsigned char *buffer) {
         T value;
         size_t index;
         for (index = sizeof(T); index > 0; index--) {
@@ -64,7 +78,7 @@ struct bytesTo<T, BigEndian>{
 
 template <typename U>
 struct bytesTo<U, LittleEndian>{
-    U operator()(unsigned char *buffer) {
+    U operator()(const unsigned char *buffer) {
         U value;
         size_t index;
         for (index = 0; index < sizeof(U); index++) {
@@ -87,6 +101,9 @@ tick_data* read_bi5(
         unsigned char *lzma_buffer, size_t lzma_buffer_size, pt::ptime epoch,
         float point_value, size_t &bytes_read);
 
+
+tick_data* read(
+        const char *filename, pt::ptime epoch, float point_value, size_t &bytes_read);
 
 } // namespace n47
 
