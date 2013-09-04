@@ -22,11 +22,11 @@ set(Boost_USER_STATIC_RUNTIME OFF)
 find_package(Boost REQUIRED COMPONENTS system filesystem unit_test_framework)
 
 # Build dependencies
-add_subdirectory(opt/easylzma)
+add_subdirectory(lib/easylzma)
 
 # Shared object and static library building
 file(GLOB lib_src "${CMAKE_SOURCE_DIR}/src" "${CMAKE_SOURCE_DIR}/src/*.cpp")
-include_directories("${CMAKE_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/opt/easylzma/src)
+include_directories("${CMAKE_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/lib/easylzma/src)
 add_library(dukascopy SHARED ${lib_src})
 add_library(dukascopy_s STATIC ${lib_src})
 
@@ -65,8 +65,6 @@ file(COPY ./include/ninety47/dukascopy.h DESTINATION ${INCDIR})
 file(GLOB tests_src RELATIVE "${CMAKE_SOURCE_DIR}/test" "${CMAKE_SOURCE_DIR}/test/*.cpp")
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test)
 file(COPY ./test/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
-
-message("boost_LIBS: ${Boost_LIBRARIES}")
 
 if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
