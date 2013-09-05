@@ -1,12 +1,17 @@
-#ifndef _ninety47_libbi5_header_109823as0920fs8_
-#define _ninety47_libbi5_header_109823as0920fs8_
+#ifndef INCLUDE_NINETY47_DUKASCOPY_H_
+#define INCLUDE_NINETY47_DUKASCOPY_H_
 
-#include <vector>
+/**
+ * Copyright 2013 Michael O'Keeffe.
+ */
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include <ctime>
 #include <cstdio>
+#include <vector>
 #include <string>
 #include <sstream>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace n47 {
 
@@ -23,7 +28,6 @@ typedef std::vector<tick*> tick_data;
 typedef std::vector<tick*>::iterator tick_data_iterator;
 
 struct tick {
-
     tick()
     : td(pt::millisec(0)), ask(0.0), bid(0.0), askv(0.0), bidv(0.0)
     {}
@@ -65,19 +69,19 @@ struct bytesTo {
 };
 
 template <typename T>
-struct bytesTo<T, BigEndian>{
+struct bytesTo<T, BigEndian> {
     T operator()(const unsigned char *buffer) {
         T value;
         size_t index;
         for (index = sizeof(T); index > 0; index--) {
-            ((unsigned char*) &value)[ sizeof(T) - index ]  =  *(buffer + index - 1);
+            ((unsigned char*) &value)[sizeof(T) - index]  =  *(buffer + index - 1);
         }
         return value;
     }
 };
 
 template <typename U>
-struct bytesTo<U, LittleEndian>{
+struct bytesTo<U, LittleEndian> {
     U operator()(const unsigned char *buffer) {
         U value;
         size_t index;
@@ -90,7 +94,7 @@ struct bytesTo<U, LittleEndian>{
 
 
 tick* tickFromBuffer(
-        unsigned char *buffer, pt::ptime epoch, float digits, size_t offset=0);
+        unsigned char *buffer, pt::ptime epoch, float digits, size_t offset = 0);
 
 
 tick_data* read_bin(
@@ -99,12 +103,12 @@ tick_data* read_bin(
 
 tick_data* read_bi5(
         unsigned char *lzma_buffer, size_t lzma_buffer_size, pt::ptime epoch,
-        float point_value, size_t &bytes_read);
+        float point_value, size_t *bytes_read);
 
 
 tick_data* read(
-        const char *filename, pt::ptime epoch, float point_value, size_t &bytes_read);
+        const char *filename, pt::ptime epoch, float point_value, size_t *bytes_read);
 
-} // namespace n47
+}  // namespace n47
 
-#endif
+#endif  // INCLUDE_NINETY47_DUKASCOPY_H_

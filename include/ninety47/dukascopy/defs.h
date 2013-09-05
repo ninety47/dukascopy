@@ -1,7 +1,11 @@
-#ifndef _ninety47_dukascopy_defs_header_included_
-#define _ninety47_dukascopy_defs_header_included_
+#ifndef INCLUDE_NINETY47_DUKASCOPY_DEFS_H_
+#define INCLUDE_NINETY47_DUKASCOPY_DEFS_H_
 
+/**
+ * Copyright 2013 Michael O'Keeffe.
+ */
 
+#include <cstdlib>
 #include "ninety47/dukascopy/loki.hpp"
 
 #ifndef _N47_ISIN
@@ -12,8 +16,9 @@
 
 namespace n47 {
 
-const int ROW_SIZE = ::n47::loki::SizeOf< TYPELIST_5(unsigned int, int, int, int, int) >::value;
+const int ROW_SIZE = ::n47::loki::SizeOf<
+    TYPELIST_5(unsigned int, int, int, int, int) >::value;
 
-} // namespace n47
+}  // namespace n47
 
-#endif // _ninety47_dukascopy_defs_header_included_
+#endif  // INCLUDE_NINETY47_DUKASCOPY_DEFS_H_

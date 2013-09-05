@@ -1,29 +1,28 @@
+/**
+ * Copyright 2013 Michael O'Keeffe.
+ */
 
+#include "ninety47/dukascopy/lzma.h"
 #include <easylzma/compress.h>
 #include <easylzma/decompress.h>
-
-#include <vector>
-#include <algorithm>
 #include <cassert>
-
+#include <algorithm>
 #include "ninety47/dukascopy.h"
-#include "ninety47/dukascopy/lzma.h"
-
+#include "ninety47/dukascopy/defs.h"
 
 namespace n47 {
 namespace lzma {
 
 size_t outputCallback(void *ctx, const void *buf, size_t size) {
-    std::vector<unsigned char>::size_type old_size;
-    datastream *ds = (datastream*) ctx;
+    datastream *ds = static_cast<datastream*>(ctx);
     assert(ds != 0);
     unsigned char *buffer = const_cast<unsigned char*>(
             static_cast<const unsigned char*>(buf));
     size_t index;
     if (size > 0) {
-        ds->outData.reserve( ds->outData.size() + size );
+        ds->outData.reserve(ds->outData.size() + size);
         for (index = 0; index < size; index++) {
-            ds->outData.push_back( *(buffer + index));
+            ds->outData.push_back(*(buffer + index));
         }
     }
 
@@ -34,7 +33,7 @@ size_t outputCallback(void *ctx, const void *buf, size_t size) {
 int inputCallback(void *ctx, void *buf, size_t *size) {
     size_t rd = 0;
     size_t index = 0;
-    datastream *ds = (datastream*) ctx;
+    datastream *ds = static_cast<datastream*>(ctx);
     assert(ds != 0);
     unsigned char *buffer = static_cast<unsigned char*>(buf);
     rd = ds->inLen < *size ? ds->inLen : *size;
@@ -46,15 +45,14 @@ int inputCallback(void *ctx, void *buf, size_t *size) {
         }
         ds->inLen -= rd;
     }
-
     *size = rd;
 
     return 0;
 }
 
-#include <iostream>
 
-unsigned char *decompress(unsigned char *inBuffer, size_t inSize, int &status, size_t &outSize) {
+unsigned char *decompress(
+        unsigned char *inBuffer, size_t inSize, int *status, size_t *outSize) {
     unsigned char *outBuffer = 0;
     elzma_file_format format = ELZMA_lzma;
 
@@ -62,17 +60,18 @@ unsigned char *decompress(unsigned char *inBuffer, size_t inSize, int &status, s
     handle = elzma_decompress_alloc();
 
     if (handle == 0) {
-        status = -1;
-    } else {    // decompression...
+        *status = -1;
+    } else {
+        // decompression...
         datastream ds(inBuffer, inSize);
-        status = elzma_decompress_run(
+        *status = elzma_decompress_run(
             handle,
-            inputCallback, (void *) &ds,
-            outputCallback, (void *) &ds,
-            format
-        );
-        if (status == ELZMA_E_OK) {
-            outSize = ds.outData.size();
+            inputCallback, static_cast<void*>(&ds),
+            outputCallback, static_cast <void*>(&ds),
+            format);
+
+        if (*status == ELZMA_E_OK) {
+            *outSize = ds.outData.size();
             outBuffer = new unsigned char[ ds.outData.size() ];
             std::copy(ds.outData.begin(), ds.outData.end(), outBuffer);
         }
@@ -83,7 +82,7 @@ unsigned char *decompress(unsigned char *inBuffer, size_t inSize, int &status, s
 }
 
 
-bool bufferIsLZMA(const unsigned char *buffer, size_t size)
+bool bufferIsLZMA(const unsigned char *buffer, size_t size) {
 /*
    LZMA detection based upon properties byte in the header and the
    uncompressed size. The LZMA file format documentation can be
@@ -112,8 +111,8 @@ bool bufferIsLZMA(const unsigned char *buffer, size_t size)
       where 10 is a guess at the upper limit of LZMA compression performance
       for the Dukascopy binary files.
 */
-{
-    static const unsigned char LZMA_PROPERTIES_MAX = 224; // (4 * 5 + 4) * 9 + 8
+    // (4 * 5 + 4) * 9 + 8 = 224
+    static const unsigned char LZMA_PROPERTIES_MAX = 224;
     n47::bytesTo<uint64_t, n47::LittleEndian> bytesTo_uint64_t;
     unsigned char properties, lc, lp, pb;
     uint64_t uncompressed_size;
@@ -133,13 +132,12 @@ bool bufferIsLZMA(const unsigned char *buffer, size_t size)
     if ( is_lzma ) {
         uncompressed_size = bytesTo_uint64_t(buffer + 5);
         is_lzma &= (uncompressed_size == 0xFFFFFFFFFFFFFFFF) ||
-                   (_N47_ISIN(uncompressed_size, static_cast<uint64_t>(size -  13), 10 * static_cast<uint64_t>(size -  13)));
+                   (_N47_ISIN(uncompressed_size, static_cast<uint64_t>(size -  13),
+                              10 * static_cast<uint64_t>(size -  13)));
     }
 
     return is_lzma;
 }
 
-} // namespace n47::lzma
-} // namespace n47
-
-
+}  // namespace lzma
+}  // namespace n47

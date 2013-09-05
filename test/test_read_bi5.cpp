@@ -1,15 +1,16 @@
-
-#include <ninety47/dukascopy.h>
-#include <ninety47/dukascopy/defs.h>
+/**
+ * Copyright 2013 Michael O'Keeffe.
+ */
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem.hpp>
+#include <ninety47/dukascopy.h>
+#include <ninety47/dukascopy/defs.h>
+#include <cstring>
 #include <iostream>
 #include <fstream>
-#include <iomanip>
-#include <cstring>
 
 #define STRINGIZE(x) #x
 #define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
@@ -27,43 +28,46 @@ int main(void) {
     unsigned char *buffer;
     size_t buffer_size;
     const char *test_data_prefix = STRINGIZE_VALUE_OF(TEST_DATA_PREFIX);
-    const char *test_data_suffix = "/test/data/compressed/GBPJPY/2012/11/03/01h_ticks.bi5";
+    const char *test_data_suffix =
+        "/test/data/compressed/GBPJPY/2012/11/03/01h_ticks.bi5";
     int counter;
     size_t raw_size = 0;
-
-    char filename[ strlen(test_data_prefix) + strlen(test_data_suffix) + 1 ];
-    snprintf(filename, sizeof(filename), "%s%s", test_data_prefix, test_data_suffix);
+    size_t filename_len = strlen(test_data_prefix) + strlen(test_data_suffix) + 1;
+    char *filename = new char[filename_len];
+    snprintf(
+        filename, filename_len, "%s%s", test_data_prefix, test_data_suffix);
 
     fs::path p(filename);
-    if ( fs::exists(p) && fs::is_regular(p)  ) {
+    if (fs::exists(p) && fs::is_regular(p)) {
         buffer_size = fs::file_size(p);
         buffer = new unsigned char[ buffer_size ];
     } else {
-        std::cout << "Error: couldn't access the data file. |" << filename << "|" <<  std::endl;
+        std::cout << "Error: couldn't access the data file. |"
+                  << filename << "|" <<  std::endl;
         return 2;
     }
 
     std::ifstream fin;
     fin.open(filename, std::ifstream::binary);
-    fin.read( reinterpret_cast<char*>(buffer), buffer_size);
-
-    if (fin) {
-        std::cout << "Read " << buffer_size << " bytes." << std::endl;
-    } else {
-        std::cout << "Error: only read " << fin.gcount() << " bytes from the file." << std::endl;
-    }
+    fin.read(reinterpret_cast<char*>(buffer), buffer_size);
     fin.close();
+
     pt::ptime epoch(gr::date(2012, 12, 3), pt::hours(1));
-    n47::tick_data *data = n47::read_bi5(buffer, buffer_size, epoch, PV_YEN_PAIR, raw_size);
+    n47::tick_data *data = n47::read_bi5(
+            buffer, buffer_size, epoch, PV_YEN_PAIR, &raw_size);
     n47::tick_data_iterator iter;
 
-    if ( data == 0 ) {
+    if (data == 0) {
+        std::cout << "Failure: Failed to load the data!" << std::endl;
         return 0;
     }
 
-    for (int i = 12; i < 16; i++)
-        std::cout << std::setfill('0') << std::setw(2) << std::hex << (int) buffer[i] << " ";
-    std::cout << std::dec << std::endl;
+    if (data->size() != (raw_size / n47::ROW_SIZE)) {
+        std::cout << "Failure: Loaded " << data->size()
+                  << " ticks but file size indicates we should have loaded "
+                  << (raw_size / n47::ROW_SIZE) << std::endl;
+        return 0;
+    }
 
     std::cout << "time, bid, bid_vol, ask, ask_vol" << std::endl;
     counter = 0;
@@ -74,10 +78,12 @@ int main(void) {
         counter++;
     }
     std::cout << ".end." << std::endl << std::endl
-              << "From " << buffer_size << " bytes we read " << counter << " records." << std::endl
-              << raw_size << " / " << n47::ROW_SIZE << " = " << (raw_size / n47::ROW_SIZE) << std::endl;
+              << "From " << buffer_size << " bytes we read " << counter
+              << " records." << std::endl
+              << raw_size << " / " << n47::ROW_SIZE << " = "
+              << (raw_size / n47::ROW_SIZE) << std::endl;
 
-
+    delete data;
     delete[] buffer;
-
+    delete filename;
 }

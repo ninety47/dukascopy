@@ -1,10 +1,12 @@
+/**
+ * Copyright 2013 Michael O'Keeffe.
+ */
 
 #include <ninety47/dukascopy.h>
 #include <cstdio>
 
 
 int main(void) {
-
     n47::bytesTo<unsigned int, n47::LittleEndian> bytesTo_ui_little;
     n47::bytesTo<unsigned int, n47::BigEndian> bytesTo_ui_big;
 
@@ -31,7 +33,5 @@ int main(void) {
     printf("bytesTo_ui_big(le) => %d\n", result);
     if (result != target_error) return 2;
 
-   return 0;
+    return 0;
 }
-
-

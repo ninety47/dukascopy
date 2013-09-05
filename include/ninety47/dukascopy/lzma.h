@@ -1,6 +1,11 @@
-#ifndef _ninety47_duakasopy_lzma_header_included_
-#define _ninety47_duakasopy_lzma_header_included_
+#ifndef INCLUDE_NINETY47_DUKASCOPY_LZMA_H_
+#define INCLUDE_NINETY47_DUKASCOPY_LZMA_H_
 
+/**
+ * Copyright 2013 Michael O'Keeffe.
+ */
+
+#include <vector>
 #include "ninety47/dukascopy/defs.h"
 
 namespace n47 {
@@ -26,12 +31,13 @@ size_t outputCallback(void *ctx, const void *buf, size_t size);
 int inputCallback(void *ctx, void *buf, size_t *size);
 
 
-unsigned char *decompress(unsigned char *inBuffer, size_t inSize, int &status, size_t &outSize);
+unsigned char *decompress(
+        unsigned char *inBuffer, size_t inSize, int *status, size_t *outSize);
 
 
 bool bufferIsLZMA(const unsigned char *buffer, size_t size);
 
-} // namespace n47::lzma
-} // namespace n47
+}  // namespace lzma
+}  // namespace n47
 
-#endif // _ninety47_duakasopy_lzma_header_included_
+#endif  // INCLUDE_NINETY47_DUKASCOPY_LZMA_H_

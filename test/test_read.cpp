@@ -1,19 +1,23 @@
+/**
+ * Copyright 2013 Michael O'Keeffe.
+ */
+
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE DukascopyTestRead
 
-#include <iostream>
-#include <iomanip>
-#include <limits>
-#include <cmath>
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
-
 #include <ninety47/dukascopy.h>
 #include <ninety47/dukascopy/defs.h>
 #include <ninety47/dukascopy/io.hpp>
 #include <ninety47/dukascopy/lzma.h>
 #include <ninety47/numeric/float.hpp>
+#include <iostream>
+#include <iomanip>
+#include <limits>
+#include <string>
+#include <cmath>
 
 #define STRINGIZE(x) #x
 #define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
@@ -52,7 +56,6 @@ size_t lzma_data_size;
 
 
 struct ReadTestConfig {
-
     ReadTestConfig() {
         num_ticks = 8;
 
@@ -62,13 +65,14 @@ struct ReadTestConfig {
         std::stringstream ss;
         ss << STRINGIZE_VALUE_OF(TEST_DATA_PREFIX) << BIN_DATA;
         std::string filename = ss.str();
-        bin_data = n47::io::loadToBuffer<unsigned char>(filename.c_str(), bin_data_size);
+        bin_data = n47::io::loadToBuffer<unsigned char>(filename.c_str(), &bin_data_size);
 
         // Load the LZMA data
         ss.str("");
         ss << STRINGIZE_VALUE_OF(TEST_DATA_PREFIX) << LZMA_DATA;
         filename = ss.str();
-        lzma_data = n47::io::loadToBuffer<unsigned char>(filename.c_str(), lzma_data_size);
+        lzma_data = n47::io::loadToBuffer<unsigned char>(
+                filename.c_str(), &lzma_data_size);
 
         // Create "num_ticks" ticks to comapre against.
         expected = new n47::tick[num_ticks];
@@ -108,7 +112,6 @@ struct ReadTestConfig {
         delete[] bin_data;
         delete[] lzma_data;
     }
-
 };
 
 
@@ -116,24 +119,26 @@ inline float almostEqual(float a, float b) {
     return num::almostEqual(a, b, 0.0005f);
 }
 
-bool ticksEqual(n47::tick &a, n47::tick &b) {
+bool ticksEqual(const n47::tick &a, const n47::tick &b) {
     return a.epoch == b.epoch && a.td == b.td &&
            almostEqual(a.ask, b.ask) && almostEqual(a.bid, b.bid) &&
            almostEqual(a.askv, b.askv) && almostEqual(a.bidv, b.bidv);
 }
 
 
-BOOST_GLOBAL_FIXTURE( ReadTestConfig );
+BOOST_GLOBAL_FIXTURE(ReadTestConfig);
 
-BOOST_AUTO_TEST_CASE( test_tickFromBuffer ) {
+BOOST_AUTO_TEST_CASE(test_tickFromBuffer) {
     size_t offset = 0;
     size_t index;
     n47::tick *tick;
 
     for (index = 0; index < num_ticks; index++) {
         tick = n47::tickFromBuffer(bin_data, epoch, PV_YEN_PAIR, offset);
-        BOOST_CHECK_MESSAGE( ticksEqual(*tick, expected[index]),
-                index << ". result: " << tick->str() << " expected: " << expected[index].str());
+        BOOST_CHECK_MESSAGE(
+                ticksEqual(*tick, expected[index]),
+                index << ". result: " << tick->str()
+                      << " expected: " << expected[index].str());
         offset += n47::ROW_SIZE;
         delete tick;
     }
@@ -141,7 +146,7 @@ BOOST_AUTO_TEST_CASE( test_tickFromBuffer ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( test_read_bin ) {
+BOOST_AUTO_TEST_CASE(test_read_bin) {
     size_t index;
     BOOST_REQUIRE_GT(bin_data_size, num_ticks * n47::ROW_SIZE);
     n47::tick_data *ticks = n47::read_bin(bin_data, bin_data_size, epoch, PV_YEN_PAIR);
@@ -150,81 +155,87 @@ BOOST_AUTO_TEST_CASE( test_read_bin ) {
     BOOST_REQUIRE_NE(ticks->size(), 0);
 
     for (index = 0; index < num_ticks; index++) {
-        BOOST_CHECK_MESSAGE( ticksEqual(*(ticks->at(index)), expected[index]),
-                index << ". result: " << ticks->at(index)->str() << " expected: " << expected[index].str());
+        BOOST_CHECK_MESSAGE(
+                ticksEqual(*(ticks->at(index)), expected[index]),
+                index << ". result: " << ticks->at(index)->str()
+                      << " expected: " << expected[index].str());
     }
 
     delete ticks;
 }
 
 
-BOOST_AUTO_TEST_CASE( test_read_bi5 ) {
+BOOST_AUTO_TEST_CASE(test_read_bi5) {
     size_t index;
     size_t bytes_read;
     BOOST_REQUIRE_GT(lzma_data_size, num_ticks * n47::ROW_SIZE);
-    n47::tick_data *ticks = n47::read_bi5(lzma_data, lzma_data_size, epoch, PV_YEN_PAIR, bytes_read);
+    n47::tick_data *ticks = n47::read_bi5(
+            lzma_data, lzma_data_size, epoch, PV_YEN_PAIR, &bytes_read);
     n47::tick_data *null_ticks = 0;
     BOOST_REQUIRE_NE(ticks, null_ticks);
     BOOST_REQUIRE_NE(ticks->size(), 0);
 
     for (index = 0; index < num_ticks; index++) {
-        BOOST_CHECK_MESSAGE( ticksEqual(*(ticks->at(index)), expected[index]),
-                index << ". result: " << ticks->at(index)->str() << " expected: " << expected[index].str());
+        BOOST_CHECK_MESSAGE(
+                ticksEqual(*(ticks->at(index)), expected[index]),
+                index << ". result: " << ticks->at(index)->str()
+                      << " expected: " << expected[index].str());
     }
 
     delete ticks;
 }
 
 
-BOOST_AUTO_TEST_CASE( test_lzma_bufferIsLZMA ) {
+BOOST_AUTO_TEST_CASE(test_lzma_bufferIsLZMA) {
 
     BOOST_CHECK_MESSAGE(
         !n47::lzma::bufferIsLZMA(bin_data, bin_data_size),
-        "bin_data should not be identified as LZMA compressed data!"
-    );
+        "bin_data should not be identified as LZMA compressed data!");
     BOOST_CHECK_MESSAGE(
         n47::lzma::bufferIsLZMA(lzma_data, lzma_data_size),
-        "lzma_data should be identified as LZMA compressed data!"
-    );
+        "lzma_data should be identified as LZMA compressed data!");
 }
 
 
-BOOST_AUTO_TEST_CASE( test_read_with_bin ) {
+BOOST_AUTO_TEST_CASE(test_read_with_bin) {
     size_t index;
     size_t bytes_read;
     std::stringstream ss;
     ss << STRINGIZE_VALUE_OF(TEST_DATA_PREFIX) << BIN_DATA;
     std::string filename = ss.str();
-    n47::tick_data *ticks = n47::read(filename.c_str(), epoch, PV_YEN_PAIR, bytes_read);
+    n47::tick_data *ticks = n47::read(filename.c_str(), epoch, PV_YEN_PAIR, &bytes_read);
     n47::tick_data *null_ticks = 0;
     BOOST_REQUIRE_NE(ticks, null_ticks);
     BOOST_REQUIRE_GT(ticks->size(), 0);
 
     for (index = 0; index < num_ticks; index++) {
-        BOOST_CHECK_MESSAGE( ticksEqual(*(ticks->at(index)), expected[index]),
-                index << ". result: " << ticks->at(index)->str() << " expected: " << expected[index].str());
+        BOOST_CHECK_MESSAGE(
+                ticksEqual(*(ticks->at(index)), expected[index]),
+                index << ". result: " << ticks->at(index)->str()
+                      << " expected: " << expected[index].str());
     }
 
     delete ticks;
 }
 
 
-BOOST_AUTO_TEST_CASE( test_read_with_bi5 ) {
+BOOST_AUTO_TEST_CASE(test_read_with_bi5) {
     size_t index;
     size_t bytes_read;
     std::stringstream ss;
     ss << STRINGIZE_VALUE_OF(TEST_DATA_PREFIX) << LZMA_DATA;
     std::string filename = ss.str();
-    n47::tick_data *ticks = n47::read(filename.c_str(), epoch, PV_YEN_PAIR, bytes_read);
+    n47::tick_data *ticks = n47::read(filename.c_str(), epoch, PV_YEN_PAIR, &bytes_read);
     n47::tick_data *null_ticks = 0;
     BOOST_REQUIRE_NE(ticks, null_ticks);
     BOOST_REQUIRE_GT(ticks->size(), 0);
 
     for (index = 0; index < num_ticks; index++) {
-        BOOST_CHECK_MESSAGE( ticksEqual(*(ticks->at(index)), expected[index]),
-                index << ". result: " << ticks->at(index)->str() << " expected: " << expected[index].str());
+        BOOST_CHECK_MESSAGE(
+                ticksEqual(*(ticks->at(index)), expected[index]),
+                index << ". result: " << ticks->at(index)->str()
+                      << " expected: " << expected[index].str());
     }
 
     delete ticks;
 }
-

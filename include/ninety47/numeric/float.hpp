@@ -1,8 +1,12 @@
+#ifndef INCLUDE_NINETY47_NUMERIC_FLOAT_H_
+#define INCLUDE_NINETY47_NUMERIC_FLOAT_H_
 
-#ifndef _ninety47_numeric_float_header_included_
-#define _ninety47_numeric_float_header_included_
+/**
+ * Copyright 2013 Michael O'Keeffe.
+ */
 
 #include <cmath>
+#include <limits>
 
 namespace n47 {
 namespace numeric {
@@ -32,18 +36,18 @@ bool almostEqual(T a, T b, T eps) {
     bool result = false;
     if ( a == b ) {
         result = true;
-    } else if ( a == policy<T>::zero() || b == policy<T>::zero() || diff < std::numeric_limits<T>::epsilon() ) {
+    } else if ( a == policy<T>::zero() ||
+                b == policy<T>::zero() ||
+                diff < std::numeric_limits<T>::epsilon() ) {
         result = diff < eps * std::numeric_limits<T>::epsilon();
     } else {
         result = (diff / (policy<T>::abs(a) + policy<T>::abs(b)) ) < eps;
     }
     return result;
-
 }
 
+}  // namespace numeric
+}  // namespace n47
 
-} // namespace numeric
-} // namespace n47
-
-#endif
+#endif  // INCLUDE_NINETY47_NUMERIC_FLOAT_H_
 
