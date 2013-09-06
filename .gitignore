@@ -6,6 +6,7 @@ CMakeFiles
 Makefile
 cmake_install.cmake
 install_manifest.txt
+build
 
 ###########################
 # C++ 
@@ -82,4 +83,11 @@ node_modules
 # Vi and VIM files.
 #--------------------------
 *.swp
+
+###########################
+# Doxygen files.
+#--------------------------
+docs/html
+docs/latex
+
 
