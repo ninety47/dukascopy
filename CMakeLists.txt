@@ -16,6 +16,9 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${LIBDISTNAME}/lib)
 set(LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/${LIBDISTNAME}/lib")
 
 # External library dependencies...
+# Set these paths if you have boost installed in a non-standard location, for example:
+# set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/opt/mse/modules/boost/1.56.0/include")
+# set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "/opt/mse/modules/boost/1.56.0/lib")
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USER_STATIC_RUNTIME OFF)
