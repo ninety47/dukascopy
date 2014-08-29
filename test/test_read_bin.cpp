@@ -47,7 +47,7 @@ int main(void) {
     int counter;
     size_t filename_len = strlen(test_data_prefix) + strlen(test_data_suffix) + 1;
     char *filename = new char[filename_len];
-    snprintf(filename, sizeof(filename), "%s%s", test_data_prefix, test_data_suffix);
+    snprintf(filename, filename_len, "%s%s", test_data_prefix, test_data_suffix);
 
     fs::path p(filename);
     if (fs::exists(p) && fs::is_regular(p)) {
@@ -73,10 +73,10 @@ int main(void) {
         return 0;
     }
 
-    if (data->size() != (raw_size / n47::ROW_SIZE)) {
+    if (data->size() != (buffer_size / n47::ROW_SIZE)) {
         std::cout << "Failure: Loaded " << data->size()
                   << " ticks but file size indicates we should have loaded "
-                  << (raw_size / n47::ROW_SIZE) << std::endl;
+                  << (buffer_size / n47::ROW_SIZE) << std::endl;
         return 0;
     }
 
