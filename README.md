@@ -38,7 +38,17 @@ from e.g. 2013/01/14/00h_ticks.bi5 has the epoch of midnight on 14 January 2013.
 Example
 =======
 
-Coming soon.
+In order to run the test examples you first need to build the project
+
+    mkdir build/
+    cd build/
+    cmake ..
+    make
+
+
+To uncompress a `.bi5`, simplest is to run the test example `test_read_bi5` from `build/`
+
+    LD_LIBRARY_PATH=./ninety47-dukascopy-0.1.0/lib/ ./test/test_read_bi5
 
 
 
